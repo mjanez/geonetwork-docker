@@ -49,28 +49,28 @@ services:
         -Dgeonetwork.indexConfig.dir=/opt/geonetwork/WEB-INF/data/config/index
         -Dgeonetwork.schemapublication.dir=/opt/geonetwork/WEB-INF/data/resources/schemapublication
         -Dgeonetwork.htmlcache.dir=/opt/geonetwork/WEB-INF/data/resources/htmlcache
-        -Des.host=elasticsearch
-        -Des.protocol=http
-        -Des.port=9200
-        -Des.url=http://elasticsearch:9200
+        -Des.host=${ES_HOST}
+        -Des.protocol=${ES_PROTOCOL}
+        -Des.port=${ES_PORT}
+        -Des.url=${ES_URL}
         -Des.username=
         -Des.password=
         -Dgeonetwork.ESFeaturesProxy.targetUri=http://elasticsearch:9200/gn-features/{_}
-        -Dgeonetwork.HttpDashboardProxy.targetUri=http://kibana:5601
+        -Dgeonetwork.HttpDashboardProxy.targetUri=${KIBANA_URL}
 
-      GEONETWORK_DB_TYPE: postgres-postgis
-      GEONETWORK_DB_HOST: database
-      GEONETWORK_DB_PORT: 5432
-      GEONETWORK_DB_NAME: geonetwork
-      GEONETWORK_DB_USERNAME: geonetwork
-      GEONETWORK_DB_PASSWORD: geonetwork
+      GEONETWORK_DB_TYPE: ${GEONETWORK_DB_TYPE}
+      GEONETWORK_DB_HOST: ${GEONETWORK_DB_HOST}
+      GEONETWORK_DB_PORT: ${GEONETWORK_DB_PORT}
+      GEONETWORK_DB_NAME: ${GEONETWORK_DB_NAME}
+      GEONETWORK_DB_USERNAME: ${GEONETWORK_DB_USERNAME}
+      GEONETWORK_DB_PASSWORD: ${GEONETWORK_DB_PASSWORD}
 
   database:
     image: postgis/postgis:16-3.4
     environment:
-      POSTGRES_USER: geonetwork
-      POSTGRES_PASSWORD: geonetwork
-      POSTGRES_DB: geonetwork
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     command: [postgres, -c, log_statement=all, -c, logging_collector=true, -c, log_file_mode=0644, -c, log_directory=/var/log/postgresql, -c, log_filename=postgresql.log]
     healthcheck:
       test: [CMD-SHELL, pg_isready -U postgres]
@@ -99,20 +99,20 @@ services:
       retries: 10
       start_period: 2m
     environment:
-      ES_JAVA_OPTS: -Xms1G -Xmx1G
-      discovery.type: single-node
+      ES_JAVA_OPTS: ${ES_JAVA_OPTS}
+      discovery.type: ${DISCOVERY_TYPE}
     volumes:
       - esdata:/usr/share/elasticsearch/data
 
   kibana:
     image: kibana:7.17.15
     environment:
-      SERVER_NAME: kibana
-      ELASTICSEARCH_URL: http://elasticsearch:9200/
-      SERVER_BASEPATH: /geonetwork/dashboards
-      SERVER_REWRITEBASEPATH: 'false'
-      KIBANA_INDEX: .dashboards
-      XPACK_MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED: 'true'
+      SERVER_NAME: ${SERVER_NAME}
+      ELASTICSEARCH_URL: ${ELASTICSEARCH_URL}
+      SERVER_BASEPATH: ${SERVER_BASEPATH}
+      SERVER_REWRITEBASEPATH: ${SERVER_REWRITEBASEPATH}
+      KIBANA_INDEX: ${KIBANA_INDEX}
+      XPACK_MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED: ${XPACK_MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED}
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -125,10 +125,12 @@ services:
     restart: always
     ports:
       - 80:80
-      - 443:443
+      - ${NGINX_SSLPORT}:${NGINX_SSLPORT}
     depends_on:
       geonetwork:
         condition: service_healthy
+    environment:
+      - NGINX_SSLPORT=${NGINX_SSLPORT}
     volumes:
       - ./nginx/setup/geonetwork-docker_local.crt:/etc/nginx/certs/geonetwork-docker_local.crt:ro
       - ./nginx/setup/geonetwork-docker_local.key:/etc/nginx/certs/geonetwork-docker_local.key:ro
