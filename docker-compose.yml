@@ -57,6 +57,7 @@ services:
         -Des.password=
         -Dgeonetwork.ESFeaturesProxy.targetUri=http://elasticsearch:9200/gn-features/{_}
         -Dgeonetwork.HttpDashboardProxy.targetUri=${KIBANA_URL}
+        -Dkb.url=${KIBANA_URL}
 
       GEONETWORK_DB_TYPE: ${GEONETWORK_DB_TYPE}
       GEONETWORK_DB_HOST: ${GEONETWORK_DB_HOST}
